@@ -4,7 +4,6 @@ import math
 import sys
 import asyncio
 import random
-import pyjs  # Для JS в pygbag, если не работает - удалите и используйте только оффлайн
 
 try:
     import android
@@ -458,15 +457,9 @@ async def main():
                         flip_view = (player_color == 1)
                         host = player_color == 0
                         if host:
-                            # Для host - создайте комнату на сервере через WS
-                            try:
-                                ws = pyjs.js.WebSocket('wss://2dc91583-3517-478c-890b-2a8859db2ca5-00-279ww8v7879bc.kirk.replit.dev/')
-                                ws.onopen = lambda: ws.send('create_room') # Отправьте команду на сервер
-                                ws.onmessage = lambda evt: print('Room: ' + evt.data) # Обработайте ответ
-                            except:
-                                winner_message = 'Connection failed'
+                            winner_message = 'Online not supported yet'
                         else:
-                            input_mode = True # Для join - ввод кода комнаты
+                            input_mode = True
                         in_lobby = False
                         started = True
                 else:
@@ -474,11 +467,7 @@ async def main():
                     if surrender_rect.collidepoint(mx, my):
                         game_over = True
                         if game_mode == 'online':
-                            try:
-                                ws = pyjs.js.WebSocket('wss://2dc91583-3517-478c-890b-2a8859db2ca5-00-279ww8v7879bc.kirk.replit.dev/')
-                                ws.onopen = lambda: ws.send('surrender')
-                            except:
-                                winner_message = 'Connection failed'
+                            winner_message = 'Online not supported yet'
                         else:
                             if Turn == 0:
                                 winner_message = 'Black wins!'
@@ -532,8 +521,6 @@ async def main():
                                     else:
                                         if [cx, cy] in Variants:
                                             perform_move(selected, (cx, cy))
-                                            if game_mode == 'online':
-                                                ws.send(f"{selected[0]} {selected[1]} {cx} {cy}")
                                             selected = None
                                         elif Board[cy][cx] != '.' and Board[cy][cx][1] == str(Turn):
                                             ShowVariants(cx, cy)
@@ -554,8 +541,6 @@ async def main():
                             Board[py][px] = choice + color
                             promotion = None
                             pending_turn_switch = True
-                            if game_mode == 'online':
-                                ws.send(choice)
                             break
         if animating_move:
             move_progress += 0.1
@@ -582,11 +567,9 @@ async def main():
             if possible_moves:
                 from_pos, to_pos = random.choice(possible_moves)
                 perform_move(from_pos, to_pos)
-        # Логика онлайн
-        if game_mode == 'online' and Turn != player_color and not animating_move and not animating_capture and not pending_turn_switch and not game_over and started and promotion is None:
-            # Получайте сообщения от WS
-            # ws.onmessage = lambda evt: perform_move_from_data(evt.data)  # Адаптируйте
-            await asyncio.sleep(0)  # Для WASM
+        # Логика онлайн - отключена для теста
+        if game_mode == 'online':
+            await asyncio.sleep(0)
         # Обработка промоушена для бота
         if promotion is not None and game_mode == 'bot' and Turn != player_color:
             px, py, color = promotion
@@ -594,9 +577,8 @@ async def main():
             Board[py][px] = choice + color
             promotion = None
             pending_turn_switch = True
-        # Обработка промоушена для онлайн
+        # Обработка промоушена для онлайн - отключена
         if promotion is not None and game_mode == 'online' and Turn != player_color:
-            # Ждите выбора от WS
             await asyncio.sleep(0)
         wind.fill((128, 128, 128))
         if in_lobby:
@@ -737,5 +719,6 @@ async def main():
             surrender_text = font.render('Surrender' if not is_mobile else 'Surr.', True, (0, 0, 0))
             wind.blit(surrender_text, (surrender_rect.centerx - surrender_text.get_width() // 2,
                                        surrender_rect.centery - surrender_text.get_height() // 2))
-        await asyncio.sleep(0)  # Критично для WASM
+        display.flip()
+        clock.tick(60)
 asyncio.run(main())
