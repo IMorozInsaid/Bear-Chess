@@ -4,7 +4,7 @@ import math
 import sys
 import asyncio
 import random
-import websocket
+import pyjs
 
 try:
     import android
@@ -473,11 +473,15 @@ async def main():
                         flip_view = (player_color == 1)
                         host = player_color == 0
                         if host:
-                            ip = socket.gethostbyname(socket.gethostname())
-                            threading.Thread(target=server_thread).start()
-                            waiting_connection = True
+                            # Для host - создайте комнату на сервере через WS
+                            try:
+                                ws = pyjs.js.WebSocket.new('wss://2dc91583-3517-478c-890b-2a8859db2ca5-00-279ww8v7879bc.kirk.replit.dev/')
+                                ws.onopen = lambda: ws.send('create_room')  # Отправьте команду на сервер
+                                ws.onmessage = lambda evt: print('Room: ' + evt.data)  # Обработайте ответ
+                            except:
+                                winner_message = 'Connection failed'
                         else:
-                            input_mode = True
+                            input_mode = True  # Для join - ввод кода комнаты
                         in_lobby = False
                         started = True
                 else:
@@ -606,7 +610,7 @@ async def main():
                     winner_message = 'You win!'
                 else:
                     sx, sy, cx, cy = map(int, data.split())
-                    perform_move((sx, sy), (cx, cy))
+                    ws.send(f"{sx} {sy} {cx} {cy}")
             except:
                 pass
 
@@ -791,4 +795,5 @@ async def main():
 
 
 asyncio.run(main())
+
 
