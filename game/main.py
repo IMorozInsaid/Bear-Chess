@@ -487,7 +487,7 @@ async def main():
                         if game_mode == 'online':
                             try:
                                 conn = websocket.WebSocket()
-                                conn.connect('wss://your-replit-url.repl.co')  # Use wss:// for https
+                                conn.connect('wss://2dc91583-3517-478c-890b-2a8859db2ca5-00-279ww8v7879bc.kirk.replit.dev/')  # Use wss:// for https
                             except:
                                 winner_message = 'Connection failed'
                         else:
@@ -791,3 +791,4 @@ async def main():
 
 
 asyncio.run(main())
+
