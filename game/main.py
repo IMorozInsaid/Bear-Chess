@@ -4,7 +4,7 @@ import math
 import sys
 import asyncio
 import random
-import pyjs
+import pyjs  # Для JS в pygbag, если не работает - удалите и используйте только оффлайн
 
 try:
     import android
@@ -321,22 +321,18 @@ sound_on = True
 started = False
 game_over = False
 winner_message = None
-in_lobby = True  # Новый флаг для лобби
-game_mode = None  # 'local' , 'bot' или 'online'
-player_color = None  # Цвет игрока в режиме bot или online: 0 - белые, 1 - черные
-flip_view = False  # Флаг для переворота доски
+in_lobby = True # Новый флаг для лобби
+game_mode = None # 'local' , 'bot' или 'online'
+player_color = None # Цвет игрока в режиме bot или online: 0 - белые, 1 - черные
+flip_view = False # Флаг для переворота доски
 input_mode = False
 input_ip = ''
 waiting_connection = False
 ip = ''
 conn = None
 host = False
-
-
 def col_to_letter(col):
     return chr(97 + col)
-
-
 # Функция для получения всех возможных ходов для текущего Turn
 def get_all_possible_moves(turn):
     all_moves = []
@@ -347,8 +343,6 @@ def get_all_possible_moves(turn):
                 for v in Variants:
                     all_moves.append(((x, y), (v[0], v[1])))
     return all_moves
-
-
 # Функция для выполнения хода (для бота и игрока)
 def perform_move(from_pos, to_pos):
     global animating_move, move_start, move_end, move_piece, move_progress, animating_capture, capture_pos, capture_piece, capture_progress, en_passant, promotion, pending_turn_switch, captured_white, captured_black, moves, castlingL, castlingR
@@ -425,8 +419,6 @@ def perform_move(from_pos, to_pos):
         promotion = (cx, cy, move_piece[1])
     else:
         pending_turn_switch = True
-
-
 async def main():
     global Turn, promotion, selected, game, check, animating_move, move_start, move_end, move_piece, move_progress, animating_capture, capture_pos, capture_piece, capture_progress, pending_turn_switch, captured_white, captured_black, moves, sound_on, started, game_over, winner_message, in_lobby, game_mode, player_color, flip_view, input_mode, input_ip, waiting_connection, ip, conn, host
     game = True
@@ -434,7 +426,6 @@ async def main():
         if is_mobile and android:
             if android.check_pause():
                 android.wait_for_resume()
-
         for e in event.get():
             if e.type == QUIT:
                 game = False
@@ -443,13 +434,7 @@ async def main():
                     if e.key == K_BACKSPACE:
                         input_ip = input_ip[:-1]
                     elif e.key == K_RETURN:
-                        try:
-                            conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                            conn.connect((input_ip, 5555))
-                            conn.setblocking(False)
-                            input_mode = False
-                        except:
-                            input_ip = ''
+                        input_mode = False
                     else:
                         input_ip += e.unicode
             if e.type == MOUSEBUTTONUP and e.button == 1:
@@ -457,7 +442,7 @@ async def main():
                 if in_lobby:
                     if lobby_local_rect.collidepoint(mx, my):
                         game_mode = 'local'
-                        player_color = None  # Не нужно для local
+                        player_color = None # Не нужно для local
                         flip_view = False
                         in_lobby = False
                         started = True
@@ -475,13 +460,13 @@ async def main():
                         if host:
                             # Для host - создайте комнату на сервере через WS
                             try:
-                                ws = pyjs.js.WebSocket.new('wss://2dc91583-3517-478c-890b-2a8859db2ca5-00-279ww8v7879bc.kirk.replit.dev/')
-                                ws.onopen = lambda: ws.send('create_room')  # Отправьте команду на сервер
-                                ws.onmessage = lambda evt: print('Room: ' + evt.data)  # Обработайте ответ
+                                ws = pyjs.js.WebSocket('wss://2dc91583-3517-478c-890b-2a8859db2ca5-00-279ww8v7879bc.kirk.replit.dev/')
+                                ws.onopen = lambda: ws.send('create_room') # Отправьте команду на сервер
+                                ws.onmessage = lambda evt: print('Room: ' + evt.data) # Обработайте ответ
                             except:
                                 winner_message = 'Connection failed'
                         else:
-                            input_mode = True  # Для join - ввод кода комнаты
+                            input_mode = True # Для join - ввод кода комнаты
                         in_lobby = False
                         started = True
                 else:
@@ -490,8 +475,8 @@ async def main():
                         game_over = True
                         if game_mode == 'online':
                             try:
-                                conn = websocket.WebSocket()
-                                conn.connect('wss://2dc91583-3517-478c-890b-2a8859db2ca5-00-279ww8v7879bc.kirk.replit.dev/')  # Use wss:// for https
+                                ws = pyjs.js.WebSocket('wss://2dc91583-3517-478c-890b-2a8859db2ca5-00-279ww8v7879bc.kirk.replit.dev/')
+                                ws.onopen = lambda: ws.send('surrender')
                             except:
                                 winner_message = 'Connection failed'
                         else:
@@ -519,7 +504,7 @@ async def main():
                         game_over = False
                         winner_message = None
                         started = True
-                        in_lobby = True  # Возврат в лобби при рестарте
+                        in_lobby = True # Возврат в лобби при рестарте
                         game_mode = None
                         player_color = None
                         flip_view = False
@@ -530,7 +515,6 @@ async def main():
                             conn = None
                     elif sound_rect.collidepoint(mx, my):
                         sound_on = not sound_on
-
                     if not animating_move and not animating_capture and not input_mode and not waiting_connection:
                         board_left = board_x if is_mobile else board_x
                         board_top = board_y
@@ -549,7 +533,7 @@ async def main():
                                         if [cx, cy] in Variants:
                                             perform_move(selected, (cx, cy))
                                             if game_mode == 'online':
-                                                conn.send(f"{selected[0]} {selected[1]} {cx} {cy}".encode())
+                                                ws.send(f"{selected[0]} {selected[1]} {cx} {cy}")
                                             selected = None
                                         elif Board[cy][cx] != '.' and Board[cy][cx][1] == str(Turn):
                                             ShowVariants(cx, cy)
@@ -571,9 +555,8 @@ async def main():
                             promotion = None
                             pending_turn_switch = True
                             if game_mode == 'online':
-                                conn.send(choice.encode())
+                                ws.send(choice)
                             break
-
         if animating_move:
             move_progress += 0.1
             if move_progress >= 1:
@@ -593,27 +576,17 @@ async def main():
             elif check == 2:
                 game_over = True
                 winner_message = 'STALEMATE!'
-
         # Логика бота
         if game_mode == 'bot' and Turn != player_color and not animating_move and not animating_capture and not pending_turn_switch and not game_over and started and promotion is None:
             possible_moves = get_all_possible_moves(Turn)
             if possible_moves:
                 from_pos, to_pos = random.choice(possible_moves)
                 perform_move(from_pos, to_pos)
-
         # Логика онлайн
-        if game_mode == 'online' and conn and Turn != player_color and not animating_move and not animating_capture and not pending_turn_switch and not game_over and started and promotion is None:
-            try:
-                data = conn.recv(1024).decode()
-                if data == 'surrender':
-                    game_over = True
-                    winner_message = 'You win!'
-                else:
-                    sx, sy, cx, cy = map(int, data.split())
-                    ws.send(f"{sx} {sy} {cx} {cy}")
-            except:
-                pass
-
+        if game_mode == 'online' and Turn != player_color and not animating_move and not animating_capture and not pending_turn_switch and not game_over and started and promotion is None:
+            # Получайте сообщения от WS
+            # ws.onmessage = lambda evt: perform_move_from_data(evt.data)  # Адаптируйте
+            await asyncio.sleep(0)  # Для WASM
         # Обработка промоушена для бота
         if promotion is not None and game_mode == 'bot' and Turn != player_color:
             px, py, color = promotion
@@ -621,19 +594,10 @@ async def main():
             Board[py][px] = choice + color
             promotion = None
             pending_turn_switch = True
-
         # Обработка промоушена для онлайн
         if promotion is not None and game_mode == 'online' and Turn != player_color:
-            try:
-                data = conn.recv(1024).decode()
-                choice = data
-                px, py, color = promotion
-                Board[py][px] = choice + color
-                promotion = None
-                pending_turn_switch = True
-            except:
-                pass
-
+            # Ждите выбора от WS
+            await asyncio.sleep(0)
         wind.fill((128, 128, 128))
         if in_lobby:
             # Рисуем лобби
@@ -698,7 +662,6 @@ async def main():
                 text = font.render(winner_message, True, (255, 0, 0))
                 board_surf.blit(text, (board_size // 2 - text.get_width() // 2, board_size // 2 - text.get_height() // 2))
             wind.blit(board_surf, (board_x, board_y))
-
             if is_mobile:
                 # Captured pieces
                 if flip_view:
@@ -760,7 +723,6 @@ async def main():
                     history_surf.blit(text, (10, y * 30 + 10))
                     y += 1
                 wind.blit(history_surf, (1050, 0))
-
             # Buttons
             font = pygame.font.SysFont(None, font_size)
             pygame.draw.rect(wind, (200, 200, 200), sound_rect)
@@ -775,25 +737,5 @@ async def main():
             surrender_text = font.render('Surrender' if not is_mobile else 'Surr.', True, (0, 0, 0))
             wind.blit(surrender_text, (surrender_rect.centerx - surrender_text.get_width() // 2,
                                        surrender_rect.centery - surrender_text.get_height() // 2))
-
-        if input_mode:
-            font = pygame.font.SysFont(None, 50)
-            text = font.render("Enter host IP: " + input_ip, True, (255, 0, 0))
-            wind.blit(text, (board_x + board_size // 2 - text.get_width() // 2, board_y + board_size // 2))
-        if waiting_connection:
-            font = pygame.font.SysFont(None, 50)
-            text1 = font.render("Your IP: " + ip, True, (255, 0, 0))
-            text2 = font.render("Waiting for player to join", True, (255, 0, 0))
-            wind.blit(text1, (board_x + board_size // 2 - text1.get_width() // 2, board_y + board_size // 2 - text1.get_height()))
-            wind.blit(text2, (board_x + board_size // 2 - text2.get_width() // 2, board_y + board_size // 2 + text1.get_height()))
-
-        display.flip()
-
-        clock.tick(60)
-        await asyncio.sleep(0)
-
-
-
+        await asyncio.sleep(0)  # Критично для WASM
 asyncio.run(main())
-
-
