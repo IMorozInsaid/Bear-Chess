@@ -4,6 +4,7 @@ import math
 import sys
 import asyncio
 import random
+import websocket
 
 try:
     import android
@@ -484,8 +485,11 @@ async def main():
                     if surrender_rect.collidepoint(mx, my):
                         game_over = True
                         if game_mode == 'online':
-                            conn.send('surrender'.encode())
-                            winner_message = 'You surrendered!'
+                            try:
+                                conn = websocket.WebSocket()
+                                conn.connect('wss://your-replit-url.repl.co')  # Use wss:// for https
+                            except:
+                                winner_message = 'Connection failed'
                         else:
                             if Turn == 0:
                                 winner_message = 'Black wins!'
@@ -783,6 +787,7 @@ async def main():
 
         clock.tick(60)
         await asyncio.sleep(0)
+
 
 
 asyncio.run(main())
